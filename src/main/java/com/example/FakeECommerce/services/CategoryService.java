@@ -37,4 +37,11 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 
+    public Category updateCategory(Long id, CategoryDTO categoryDTO) {
+        Category category = categoryRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        if (categoryDTO.getName() != null) {
+            category.setName(categoryDTO.getName());
+        }
+        return category;
+    }
 }

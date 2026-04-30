@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,5 +51,11 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<Category>> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
         return ResponseEntity.ok(ApiResponse.success(category, "Category fetched successfully"));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<Category>> updateCategoryById(@PathVariable Long id, @RequestBody CategoryDTO categoryDto){
+        Category category = categoryService.updateCategory(id, categoryDto);
+        return ResponseEntity.ok(ApiResponse.success(category, "Category updated successfully"));
     }
 }
