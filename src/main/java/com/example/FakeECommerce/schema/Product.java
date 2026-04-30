@@ -2,6 +2,9 @@ package com.example.FakeECommerce.schema;
 
 import java.math.BigDecimal;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -23,11 +26,9 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 @Table(name = "products")
-public class Product {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+@SQLDelete(sql = "UPDATE products SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@SQLRestriction("deleted_at IS NULL")
+public class Product extends BaseEntity {
     @Column(name = "name", nullable = false)
     private String name;
     @Column(name = "description", nullable = false)

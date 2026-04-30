@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.dtos.ProductDTO;
+import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.repositories.CategoryRepository;
 import com.example.FakeECommerce.repositories.ProductRepository;
 import com.example.FakeECommerce.schema.Category;
@@ -23,7 +24,9 @@ public class ProductService {
     }
 
     public Product createProduct(ProductDTO productDTO) {
-        Category category = categoryRepository.findById(productDTO.getCategoryId()).orElse(null);
+        Long categoryId = productDTO.getCategoryId();
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
 
         Product product = Product.builder()
                 .name(productDTO.getName())
@@ -36,15 +39,14 @@ public class ProductService {
     }
 
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
+        return productRepository.findByIdWithCategory(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     public void deleteProductById(Long id) {
-        try {
-            productRepository.deleteById(id);
-        } catch (Exception e) {
-            throw new RuntimeException("Product not found", e);
-        }
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+        productRepository.delete(product);
     }
 
     public List<Product> getProductsByCategory(String category) {

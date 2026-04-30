@@ -3,9 +3,12 @@ package com.example.FakeECommerce.services;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.dtos.OrderProductDTO;
 import com.example.FakeECommerce.dtos.OrderProductProductDTO;
 import com.example.FakeECommerce.repositories.OrderProductRepository;
@@ -25,7 +28,9 @@ public class OrderProductService implements OrderProductInterface {
     @Override
     public OrderProduct createNewOrderProduct(OrderProductDTO orderProductDTO, Order order) {
         // 1. get product from id
-        Product product = productRepository.findById(orderProductDTO.getProductId()).orElse(null);
+        Long productId = orderProductDTO.getProductId();
+        Product product = productRepository.findByIdWithCategory(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
         // 2. create new order product
         OrderProduct orderProduct = OrderProduct.builder()
                 .order(order)
@@ -45,7 +50,13 @@ public class OrderProductService implements OrderProductInterface {
         }
 
         // get all product info
-        List<Product> products = productRepository.findAllById(productCountMap.keySet());
+        var requestedIds = productCountMap.keySet();
+        List<Product> products = productRepository.findAllById(requestedIds);
+        Set<Long> foundIds = products.stream().map(Product::getId).collect(Collectors.toSet());
+        List<Long> missingIds = requestedIds.stream().filter(id -> !foundIds.contains(id)).toList();
+        if (!missingIds.isEmpty()) {
+            throw new ResourceNotFoundException("Products not found with ids: " + missingIds);
+        }
 
         // create the builder array
         List<OrderProduct> orderProducts = new ArrayList<>();

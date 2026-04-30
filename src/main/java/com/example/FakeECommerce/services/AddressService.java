@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.dtos.AddressDTO;
+import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.repositories.AddressRepository;
 import com.example.FakeECommerce.schema.Address;
 
@@ -21,11 +22,14 @@ public class AddressService {
     }
 
     public Address getAddressById(Long id) {
-        return addressRepository.findById(id).orElse(null);
+        return addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + id));
     }
 
     public void deleteAddressById(Long id) {
-        addressRepository.deleteById(id);
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + id));
+        addressRepository.delete(address);
     }
 
     public Address createNewAddress(AddressDTO addressDTO) {

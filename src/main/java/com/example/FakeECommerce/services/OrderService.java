@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.dtos.OrderDTO;
 import com.example.FakeECommerce.dtos.OrderResponseDTO;
 import com.example.FakeECommerce.dtos.ProductDTO;
@@ -34,7 +35,9 @@ public class OrderService {
 
     private Order createOrderInDB(OrderDTO orderDTO) {
         // 1. get the address from the addresses
-        Address address = addressRepository.findById(orderDTO.getAddressId()).orElse(null);
+        Long addressId = orderDTO.getAddressId();
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
         // save the order in Orders table
         return orderRepository.save(orderMapper.createOrderMapper(address));
     }
@@ -56,7 +59,9 @@ public class OrderService {
     }
 
     public void deleteOrderById(Long id) {
-        orderRepository.deleteById(id);
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+        orderRepository.delete(order);
     }
 
     public List<OrderResponseDTO> getAllOrders() {
@@ -80,6 +85,7 @@ public class OrderService {
     }
 
     public Order getOrderById(Long id) {
-        return orderRepository.findById(id).orElse(null);
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
     }
 }
