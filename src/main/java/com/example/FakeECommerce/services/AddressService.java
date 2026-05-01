@@ -41,4 +41,19 @@ public class AddressService {
         return addressRepository.save(address);
     }
 
+    public Address updateAddress(Long id, AddressDTO addressDTO) {
+        Address address = addressRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + id));
+        if (addressDTO.getDescription() != null) {
+            address.setDescription(addressDTO.getDescription());
+        }
+        if (addressDTO.getLattitude() != null) {
+            address.setLattitude(addressDTO.getLattitude());
+        }
+        if (addressDTO.getLongitude() != null) {
+            address.setLongitude(addressDTO.getLongitude());
+        }
+        return addressRepository.save(address);
+    }
+
 }

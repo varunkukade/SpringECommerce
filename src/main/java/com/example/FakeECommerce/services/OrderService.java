@@ -9,17 +9,17 @@ import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.dtos.OrderDTO;
+import com.example.FakeECommerce.dtos.OrderItemAndCountDTO;
+import com.example.FakeECommerce.dtos.OrderItemDTO;
 import com.example.FakeECommerce.dtos.OrderResponseDTO;
-import com.example.FakeECommerce.dtos.ProductDTO;
+import com.example.FakeECommerce.dtos.OrderItemResponseDTO;
 import com.example.FakeECommerce.mappers.order.OrderMapper;
-import com.example.FakeECommerce.mappers.product.ProductMapper;
-import com.example.FakeECommerce.repositories.AddressRepository;
-import com.example.FakeECommerce.repositories.OrderProductRepository;
 import com.example.FakeECommerce.repositories.OrderRepository;
-import com.example.FakeECommerce.schema.Address;
 import com.example.FakeECommerce.schema.Order;
 import com.example.FakeECommerce.schema.OrderProduct;
 import com.example.FakeECommerce.schema.Product;
+import com.example.FakeECommerce.utils.OrderUtils;
+import com.example.FakeECommerce.utils.OrderUtils.ProductsAndCounts;
 
 import lombok.AllArgsConstructor;
 
@@ -27,35 +27,65 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class OrderService {
     private OrderRepository orderRepository;
-    private AddressRepository addressRepository;
+    private AddressService addressService;
     private OrderProductInterface orderProductService;
-    private OrderProductRepository orderProductRepository;
-    private OrderMapper orderMapper;
-    private ProductMapper productMapper;
 
     private Order createOrderInDB(OrderDTO orderDTO) {
         // 1. get the address from the addresses
         Long addressId = orderDTO.getAddressId();
-        Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Address not found with id: " + addressId));
-        // save the order in Orders table
-        return orderRepository.save(orderMapper.createOrderMapper(address));
+        // 2. save the order in Orders table
+        return orderRepository.save(OrderMapper.createOrderMapper(addressService.getAddressById(addressId)));
     }
 
-    private OrderResponseDTO generateCreateOrderResponse(List<Product> products, Order order) {
+    private Order updateOrderInDB(Long orderId, OrderDTO orderDTO) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        if (orderDTO.getAddressId() != null) {
+            order.setAddress(addressService.getAddressById(orderDTO.getAddressId()));
+        }
+        return orderRepository.save(order);
+    }
+
+    private OrderResponseDTO generateOrderResponse(List<Product> products, Order order,
+            Map<Long, Integer> orderItemCountmap) {
         // create the product response dto builder array.
-        List<ProductDTO> productResponseDTOs = new ArrayList<>();
+        List<OrderItemResponseDTO> productResponseDTOs = new ArrayList<>();
         for (Product product : products) {
-            productResponseDTOs.add(productMapper.productDTOMapper(product));
+            productResponseDTOs.add(OrderMapper.toOrderItemResponseDTO(product,
+                    orderItemCountmap.getOrDefault(product.getId(), 0)));
         }
         // generate create order response
-        return orderMapper.createOrderResponseDTOMapper(order.getId(), order.getAddress(), productResponseDTOs);
+        return OrderMapper.createOrderResponseDTOMapper(order.getId(), order.getAddress(), productResponseDTOs);
     }
 
     public OrderResponseDTO createNewOrder(OrderDTO orderDto) {
+        // update order table
         Order order = this.createOrderInDB(orderDto);
-        List<Product> products = orderProductService.createNewOrderProductsBatch(orderDto.getProducts(), order);
-        return this.generateCreateOrderResponse(products, order);
+
+        // update order_products table
+        Map<Long, Integer> orderItemCountmap = OrderUtils.getOrderItemCountHashmap(orderDto.getProducts());
+        List<OrderProduct> orderProductsResponse = orderProductService.createNewOrderProductsBatch(
+                orderDto.getProducts(), order,
+                orderItemCountmap);
+
+        // return order response
+        ProductsAndCounts productAndCounts = OrderUtils.getProductsAndCounts(orderProductsResponse);
+        return this.generateOrderResponse(productAndCounts.products(), order, productAndCounts.orderItemCounts());
+    }
+
+    public OrderResponseDTO updateOrder(Long orderId, OrderDTO orderDTO) {
+        List<OrderItemDTO> newOrderItems = orderDTO.getProducts();
+
+        // update the orders table
+        Order order = this.updateOrderInDB(orderId, orderDTO);
+
+        // update the order_products table
+        orderProductService.updateOrderProductsBatch(newOrderItems, order);
+
+        // return the order response
+        List<OrderProduct> orderProductsResponse = orderProductService.findAllByOrderId(orderId);
+        ProductsAndCounts productAndCounts = OrderUtils.getProductsAndCounts(orderProductsResponse);
+        return this.generateOrderResponse(productAndCounts.products(), order, productAndCounts.orderItemCounts());
     }
 
     public void deleteOrderById(Long id) {
@@ -65,21 +95,30 @@ public class OrderService {
     }
 
     public List<OrderResponseDTO> getAllOrders() {
+        // get data from orders table.
         List<Order> orders = orderRepository.findAllWithAddress();
+
+        // get data from order_products table
         List<Long> orderIds = orders.stream().map(Order::getId).toList();
-        List<OrderProduct> lines = orderProductRepository.findAllByOrderIdInWithProductAndCategory(orderIds);
-        Map<Long, List<Product>> linesByOrderId = new HashMap<>();
+        List<OrderProduct> lines = orderProductService.findAllByOrderIds(orderIds);
+
+        // use both of the responses and return orders response.
+        Map<Long, OrderItemAndCountDTO> orderItemCountMapByOrderId = new HashMap<>();
         for (OrderProduct line : lines) {
             Long orderId = line.getOrder().getId();
-            if (!linesByOrderId.containsKey(orderId)) {
-                linesByOrderId.put(orderId, new ArrayList<>());
+            if (!orderItemCountMapByOrderId.containsKey(orderId)) {
+                orderItemCountMapByOrderId.put(orderId, OrderItemAndCountDTO.builder().orderItems(new ArrayList<>())
+                        .orderItemCountMap(new HashMap<>()).build());
             }
-            linesByOrderId.get(orderId).add(line.getProduct());
+            orderItemCountMapByOrderId.get(orderId).getOrderItems().add(line.getProduct());
+            orderItemCountMapByOrderId.get(orderId).getOrderItemCountMap().put(line.getProduct().getId(),
+                    line.getCount());
         }
         List<OrderResponseDTO> orderResponseDTOs = new ArrayList<>();
         for (Order order : orders) {
             Long id = order.getId();
-            orderResponseDTOs.add(this.generateCreateOrderResponse(linesByOrderId.get(id), order));
+            orderResponseDTOs.add(this.generateOrderResponse(orderItemCountMapByOrderId.get(id).getOrderItems(),
+                    order, orderItemCountMapByOrderId.get(id).getOrderItemCountMap()));
         }
         return orderResponseDTOs;
     }

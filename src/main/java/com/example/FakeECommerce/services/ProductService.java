@@ -38,6 +38,33 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product updateProduct(Long productId, ProductDTO productDTO) {
+        Product product = productRepository.findById(
+                productId).orElseThrow(
+                        () -> new ResourceNotFoundException(
+                                "Product not found with id: " + productId));
+        if (productDTO.getName() != null) {
+            product.setName(productDTO.getName());
+        }
+        if (productDTO.getDescription() != null) {
+            product.setDescription(productDTO.getDescription());
+        }
+        if (productDTO.getPrice() != null) {
+            product.setPrice(productDTO.getPrice());
+        }
+        if (productDTO.getImageUrl() != null) {
+            product.setImageUrl(productDTO.getImageUrl());
+        }
+        if (productDTO.getCategoryId() != null) {
+            Category category = categoryRepository.findById(productDTO
+                    .getCategoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + productDTO
+                            .getCategoryId()));
+            product.setCategory(category);
+        }
+        return productRepository.save(product);
+    }
+
     public Product getProductById(Long id) {
         return productRepository.findByIdWithCategory(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
@@ -53,4 +80,7 @@ public class ProductService {
         return productRepository.findByCategoryIgnoreCase(category);
     }
 
+    public List<Product> findAllProductsById(List<Long> productIds) {
+        return productRepository.findAllById(productIds);
+    }
 }

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,5 +53,12 @@ public class AddressController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.<Address>success(address, "Address created successfully"));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<Address>> updateAddressById(@PathVariable Long id,
+            @RequestBody AddressDTO addressDto) {
+        Address address = addressService.updateAddress(id, addressDto);
+        return ResponseEntity.ok(ApiResponse.<Address>success(address, "Address updated successfully"));
     }
 }

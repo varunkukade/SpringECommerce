@@ -1,24 +1,30 @@
 package com.example.FakeECommerce.mappers.order;
 
-import java.util.List;
-
 import org.springframework.stereotype.Component;
 
-import com.example.FakeECommerce.dtos.OrderResponseDTO;
-import com.example.FakeECommerce.dtos.ProductDTO;
-import com.example.FakeECommerce.schema.Address;
+import com.example.FakeECommerce.exception.ResourceNotFoundException;
+import com.example.FakeECommerce.repositories.ProductRepository;
 import com.example.FakeECommerce.schema.Order;
+import com.example.FakeECommerce.schema.OrderProduct;
+import com.example.FakeECommerce.schema.Product;
+
+import lombok.AllArgsConstructor;
 
 @Component
+@AllArgsConstructor
 public class OrderMapperImpl implements OrderMapper {
-    @Override
-    public Order createOrderMapper(Address address) {
-        return Order.builder().address(address).build();
-    }
+
+    private ProductRepository productRepository;
 
     @Override
-    public OrderResponseDTO createOrderResponseDTOMapper(Long id, Address address, List<ProductDTO> products) {
-        return OrderResponseDTO.builder().id(id).address(address)
-                .products(products).build();
+    public OrderProduct toOrderProduct(Long productId, Integer productCount, Order order) {
+        Product product = productRepository.findByIdWithCategory(
+                productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + productId));
+        return OrderProduct.builder()
+                .order(order)
+                .product(product)
+                .count(productCount)
+                .build();
     }
 }

@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderDTO {
-    private List<OrderProductProductDTO> products;
+    private List<OrderItemDTO> products;
     private Long addressId;
 }
