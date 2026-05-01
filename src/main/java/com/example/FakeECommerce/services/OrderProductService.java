@@ -100,4 +100,9 @@ public class OrderProductService implements OrderProductInterface {
     public List<OrderProduct> findAllByOrderIds(List<Long> orderIds) {
         return orderProductRepository.findAllByOrderIdInWithProductAndCategory(orderIds);
     }
+
+    @Override
+    public void deleteAllByOrderId(Long orderId) {
+        orderProductRepository.deleteAllByOrder_Id(orderId);
+    }
 }

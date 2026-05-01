@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.FakeECommerce.exception.ResourceNotFoundException;
 import com.example.FakeECommerce.dtos.OrderDTO;
@@ -88,10 +89,16 @@ public class OrderService {
         return this.generateOrderResponse(productAndCounts.products(), order, productAndCounts.orderItemCounts());
     }
 
+    @Transactional
     public void deleteOrderById(Long id) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
-        orderRepository.delete(order);
+        if (order.getDeletedAt() == null) {
+            orderProductService.deleteAllByOrderId(id);
+            orderRepository.deleteById(id);
+        } else {
+            throw new ResourceNotFoundException("Order not found with id: " + id);
+        }
     }
 
     public List<OrderResponseDTO> getAllOrders() {
@@ -123,8 +130,17 @@ public class OrderService {
         return orderResponseDTOs;
     }
 
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id)
+    public OrderResponseDTO getOrderById(Long id) {
+        // get order from orders table.
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+
+        // get data of products from order_products table
+        List<OrderProduct> orderProductsResponse = orderProductService.findAllByOrderId(id);
+
+        ProductsAndCounts productAndCounts = OrderUtils.getProductsAndCounts(orderProductsResponse);
+
+        // combine the data to generate and return order response
+        return this.generateOrderResponse(productAndCounts.products(), order, productAndCounts.orderItemCounts());
     }
 }

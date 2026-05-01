@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.FakeECommerce.dtos.OrderDTO;
 import com.example.FakeECommerce.dtos.OrderResponseDTO;
-import com.example.FakeECommerce.schema.Order;
 import com.example.FakeECommerce.services.OrderService;
 import com.example.FakeECommerce.utils.ApiResponse;
 
@@ -57,9 +56,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Order>> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrderById(@PathVariable Long id) {
+        OrderResponseDTO order = orderService.getOrderById(id);
         return ResponseEntity
-                .ok(ApiResponse.<Order>success(order, "Order fetched successfully"));
+                .ok(ApiResponse.<OrderResponseDTO>success(order, "Order fetched successfully"));
     }
 }

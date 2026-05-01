@@ -19,4 +19,6 @@ public interface OrderProductInterface {
     public List<OrderProduct> findAllByOrderId(Long orderId);
 
     public List<OrderProduct> findAllByOrderIds(List<Long> orderIds);
+
+    public void deleteAllByOrderId(Long orderId);
 }
