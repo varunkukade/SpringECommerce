@@ -1,7 +1,6 @@
 package com.example.FakeECommerce.services;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -48,19 +47,14 @@ public class OrderProductService implements OrderProductInterface {
         }
 
         // create the builder array
-        List<OrderProduct> orderProducts = new ArrayList<>();
-        for (Product product : products) {
-            OrderProduct orderProduct = OrderProduct.builder()
-                    .order(order)
-                    .product(product)
-                    .count(productCountMap.getOrDefault(product.getId(), 0))
-                    .build();
-            orderProducts.add(orderProduct);
-        }
+        List<OrderProduct> orderProducts = products.stream().map(eachProduct -> OrderProduct.builder()
+                .order(order)
+                .product(eachProduct)
+                .count(productCountMap.getOrDefault(eachProduct.getId(), 0))
+                .build()).collect(Collectors.toList());
 
-        // save all order product into OrderProduct table
-        List<OrderProduct> orderProductsResponse = orderProductRepository.saveAll(orderProducts);
-        return orderProductsResponse;
+        // save all order product into OrderProduct table and return response
+        return orderProductRepository.saveAll(orderProducts);
     }
 
     @Override

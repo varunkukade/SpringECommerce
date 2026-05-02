@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,11 +52,10 @@ public class OrderService {
     private OrderResponseDTO generateOrderResponse(List<Product> products, Order order,
             Map<Long, Integer> orderItemCountmap) {
         // create the product response dto builder array.
-        List<OrderItemResponseDTO> productResponseDTOs = new ArrayList<>();
-        for (Product product : products) {
-            productResponseDTOs.add(OrderMapper.toOrderItemResponseDTO(product,
-                    orderItemCountmap.getOrDefault(product.getId(), 0)));
-        }
+        List<OrderItemResponseDTO> productResponseDTOs = products.stream()
+                .map(eachProduct -> OrderMapper.toOrderItemResponseDTO(eachProduct,
+                        orderItemCountmap.getOrDefault(eachProduct.getId(), 0)))
+                .collect(Collectors.toList());
         // generate create order response
         return OrderMapper.createOrderResponseDTOMapper(order.getId(), order.getAddress(), productResponseDTOs);
     }
@@ -121,13 +122,11 @@ public class OrderService {
             orderItemCountMapByOrderId.get(orderId).getOrderItemCountMap().put(line.getProduct().getId(),
                     line.getCount());
         }
-        List<OrderResponseDTO> orderResponseDTOs = new ArrayList<>();
-        for (Order order : orders) {
-            Long id = order.getId();
-            orderResponseDTOs.add(this.generateOrderResponse(orderItemCountMapByOrderId.get(id).getOrderItems(),
-                    order, orderItemCountMapByOrderId.get(id).getOrderItemCountMap()));
-        }
-        return orderResponseDTOs;
+        return orders.stream()
+                .map(eachOrder -> this.generateOrderResponse(
+                        orderItemCountMapByOrderId.get(eachOrder.getId()).getOrderItems(),
+                        eachOrder, orderItemCountMapByOrderId.get(eachOrder.getId()).getOrderItemCountMap()))
+                .collect(Collectors.toList());
     }
 
     public OrderResponseDTO getOrderById(Long id) {
