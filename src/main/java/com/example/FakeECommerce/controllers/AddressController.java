@@ -1,7 +1,8 @@
 package com.example.FakeECommerce.controllers;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,10 +27,10 @@ public class AddressController {
     private AddressService addressService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<Address>>> getAllAddresses() {
-        List<Address> addresses = addressService.getAllAddresses();
+    public ResponseEntity<ApiResponse<Page<Address>>> getAllAddresses(@PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<Address> addresses = addressService.getAllAddresses(pageable);
         return ResponseEntity
-                .ok(ApiResponse.<List<Address>>success(addresses, "Addresses fetched successfully"));
+                .ok(ApiResponse.<Page<Address>>success(addresses, "Addresses fetched successfully"));
     }
 
     @DeleteMapping("/{id}")

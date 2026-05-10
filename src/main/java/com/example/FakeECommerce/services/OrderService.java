@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.exception.ResourceNotFoundException;
@@ -64,8 +66,8 @@ public class OrderService {
         orderRepository.delete(order);
     }
 
-    public List<OrderResponseDTO> getAllOrders() {
-        List<Order> orders = orderRepository.findAllWithAddress();
+    public Page<OrderResponseDTO> getAllOrders(Pageable pageable) {
+        Page<Order> orders = orderRepository.findAllWithAddress(pageable);
         List<Long> orderIds = orders.stream().map(Order::getId).toList();
         List<OrderProduct> lines = orderProductRepository.findAllByOrderIdInWithProductAndCategory(orderIds);
         Map<Long, List<Product>> linesByOrderId = new HashMap<>();

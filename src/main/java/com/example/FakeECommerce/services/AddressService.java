@@ -1,7 +1,7 @@
 package com.example.FakeECommerce.services;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.dtos.AddressDTO;
@@ -17,8 +17,8 @@ public class AddressService {
 
     private AddressRepository addressRepository;
 
-    public List<Address> getAllAddresses() {
-        return addressRepository.findAll();
+    public Page<Address> getAllAddresses(Pageable pageable) {
+        return addressRepository.findAll(pageable);
     }
 
     public Address getAddressById(Long id) {

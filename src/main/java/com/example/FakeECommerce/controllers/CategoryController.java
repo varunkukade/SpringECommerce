@@ -2,6 +2,9 @@ package com.example.FakeECommerce.controllers;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,10 +30,10 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<Category>>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
+    public ResponseEntity<ApiResponse<Page<Category>>> getAllCategories(@PageableDefault(page = 0, size = 10) Pageable pageable) {
+        Page<Category> categories = categoryService.getAllCategories(pageable);
         return ResponseEntity
-                .ok(ApiResponse.<List<Category>>success(categories, "Categories fetched successfully"));
+                .ok(ApiResponse.<Page<Category>>success(categories, "Categories fetched successfully"));
     }
 
     @PostMapping

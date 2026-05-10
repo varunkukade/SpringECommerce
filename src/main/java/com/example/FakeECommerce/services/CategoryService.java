@@ -2,6 +2,8 @@ package com.example.FakeECommerce.services;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.example.FakeECommerce.dtos.CategoryDTO;
@@ -17,8 +19,8 @@ public class CategoryService {
 
     private CategoryRepository categoryRepository;
 
-    public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+    public Page<Category> getAllCategories(Pageable pageable) {
+        return categoryRepository.findAll(pageable);
     }
 
     public Category createCategory(CategoryDTO categoryDTO) {
