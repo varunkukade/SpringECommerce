@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +43,13 @@ public class ProductController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.<Product>success(product, "Product created successfully"));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<Product>> updateAddressById(@PathVariable Long id,
+            @RequestBody ProductDTO productDTO) {
+        Product product = productService.updateProduct(id, productDTO);
+        return ResponseEntity.ok(ApiResponse.<Product>success(product, "Product updated successfully"));
     }
 
     @GetMapping("/{id}")

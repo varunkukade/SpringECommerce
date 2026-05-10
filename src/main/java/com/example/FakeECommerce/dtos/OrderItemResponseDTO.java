@@ -7,6 +7,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @AllArgsConstructor
 @SuperBuilder
-public class ProductResponseDTO extends ProductDTO {
+public class OrderItemResponseDTO extends ProductDTO {
     private Long id;
+    private Integer count;
 }

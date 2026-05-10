@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.FakeECommerce.dtos.OrderDTO;
 import com.example.FakeECommerce.dtos.OrderResponseDTO;
-import com.example.FakeECommerce.schema.Order;
 import com.example.FakeECommerce.services.OrderService;
 import com.example.FakeECommerce.utils.ApiResponse;
 
@@ -44,6 +44,13 @@ public class OrderController {
                 .body(ApiResponse.<OrderResponseDTO>success(order, "Order created successfully"));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> updateOrderById(@PathVariable Long id,
+            @RequestBody OrderDTO orderDTO) {
+        OrderResponseDTO orderResponseDTO = orderService.updateOrder(id, orderDTO);
+        return ResponseEntity.ok(ApiResponse.<OrderResponseDTO>success(orderResponseDTO, "Order updated successfully"));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteOrder(@PathVariable Long id) {
         orderService.deleteOrderById(id);
@@ -52,9 +59,9 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Order>> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
+    public ResponseEntity<ApiResponse<OrderResponseDTO>> getOrderById(@PathVariable Long id) {
+        OrderResponseDTO order = orderService.getOrderById(id);
         return ResponseEntity
-                .ok(ApiResponse.<Order>success(order, "Order fetched successfully"));
+                .ok(ApiResponse.<OrderResponseDTO>success(order, "Order fetched successfully"));
     }
 }

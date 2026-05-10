@@ -29,5 +29,5 @@ public class OrderResponseDTO {
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
 
-    private List<ProductDTO> products;
+    private List<OrderItemResponseDTO> products;
 }
